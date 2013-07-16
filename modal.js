@@ -63,6 +63,7 @@ function resizeModal(width, targetHeight) {
   animate($dom.wrapper, newCss);
 }
 
+// Takes a string or a dom node and sets it as the child of the header.
 function setTitle(content) {
   if (typeof content === "string") {
     $dom.header.html(content);
@@ -84,6 +85,8 @@ function makeButtons(specs) {
   });
 }
 
+// Takes a list of button specs and set the footer to those buttons.
+// If no buttons are provided it hides the footer.
 function setButtons(specs) {
   var buttons = makeButtons(specs);
     $dom.footer.empty();
@@ -132,8 +135,13 @@ function swapPanes(options) {
   var oldWidth = $dom.wrapper.outerWidth(),
       view = $(options.view);
   options.view.removeClass("pre-show");
-  
-  resizeModal(width, desiredHeight);
+  setButtons(options.buttons);
+  $dom.wrapper.removeClass();
+  if (options["class"]) {
+    $dom.wrapper.addClass(options["class"]);
+  }
+  setTitle(options.title);
+  resizeModal(options.width, options.desiredHeight);
   animate($dom.slider, {left : "-" + (options.direction === -1 ? oldWidth : 0) + "px"});
 }
 
