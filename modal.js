@@ -37,11 +37,14 @@ it will attempt to get them from the current panes dom.
 
 var $dom = {
   wrapper : $("#modal-wrapper"),
-  slider : $("#modal-pane-slider")
+  slider : $("#modal-pane-slider"),
+  body : $("#modal-body"),
+  header : $("#modal-header"),
+  footer : $("#modal-footer"),
+  footerRow : $("#modal-footer").parent()
 };
 
 function animate(element, newCss) {
-  console.log(newCss);
   if(!Modernizr.csstransitions) {
     element.css(newCss);
   } else {
@@ -50,13 +53,46 @@ function animate(element, newCss) {
 }
 
 function resizeModal(width, targetHeight) {
+  var realTargetHeight = targetHeight + $dom.wrapper.outerHeight() - $dom.body.outerHeight();
   var $window = $(window),
-      height = Math.min($window.height() - 50, targetHeight);
+      height = Math.min($window.height() - 50, realTargetHeight);
   var newCss = {width : width + "px",
                 height : height + "px",
                 "margin-left" : "-" + (width / 2) + "px",
                 "margin-top" : "-" + (height / 2) + "px"};
   animate($dom.wrapper, newCss);
+}
+
+function setTitle(content) {
+  if (typeof content === "string") {
+    $dom.header.html(content);
+  } else {
+    $dom.header.empty().append(content);
+  }
+}
+
+function makeButtons(specs) {
+  return _.map(specs, function(spec) {
+    var button = $("<button class='modal-button'><span>" + spec.text + "</span></button>");
+    if (spec["class"]) {
+      button.addClass(specs[i]["class"]);
+    }
+    if (spec.click) {
+      button.click(spec.click);
+    }
+    return button
+  });
+}
+
+function setButtons(specs) {
+  var buttons = makeButtons(specs);
+    $dom.footer.empty();
+  if (buttons.length) {
+    $dom.footer.append(buttons);
+    $dom.footerRow.show();
+  } else {
+    $dom.footerRow.hide();
+  }
 }
 
 /* takes a direction (left: -1, right: 1),
@@ -79,10 +115,25 @@ function setupPaneSwap(direction, width, view, currentView) {
       .addClass("pre-show");
 }
 
-function swapPanes(direction, width, desiredHeight, view) {
-  var oldWidth = $dom.wrapper.width();
-  view.removeClass("pre-show");
+/**
+  Sets the new title and buttons, and then 
+  animates the new pane into view.
+  view : the dom node to switch to
+  width : the width of the modal
+  desiredHeight : the modal height, not guaranteed
+  title : Can be a string or a dom node
+  buttons : (optional) an array of objs with keys
+    text : the button text
+    class : can be multiple classes seperated by spaces
+    click : a function to bind to the click event
+  class : (optional) a class to apply to the modal wrapper
+*/
+function swapPanes(options) {
+  var oldWidth = $dom.wrapper.outerWidth(),
+      view = $(options.view);
+  options.view.removeClass("pre-show");
+  
   resizeModal(width, desiredHeight);
-  animate($dom.slider, {left : "-" + (direction === -1 ? oldWidth : 0) + "px"});
+  animate($dom.slider, {left : "-" + (options.direction === -1 ? oldWidth : 0) + "px"});
 }
 

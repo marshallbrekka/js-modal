@@ -8,6 +8,7 @@
 }
 
 #modal-wrapper {
+    border-spacing:0;
     position:absolute;
     top:50%;
     left:50%;
@@ -17,7 +18,7 @@
     height:200px;
     margin-top:-100px;
     margin-left:-200px;
-    border-radius:10px;
+    border-radius:4px;
     box-shadow:0 2px 10px 0px rgba(0,0,0,0.5);
 }
 
@@ -38,21 +39,13 @@
 }
 
 #modal-header {
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
     height:45px;
-    border-radius:10px 10px 0 0;
     background:#a6a6a6;
+    border-radius:4px 4px 0 0;
 }
 
 #modal-body {
-    position:absolute;
-    top:45px;
-    bottom:45px;
-    left:0;
-    right:0;
+    position:relative;
     background:#fff;
     overflow:hidden;
 }
@@ -71,7 +64,7 @@
     position:absolute;
     top:0;
     bottom:0;
-    overflow:scroll;
+    overflow:auto;
 }
 
 .modal-pane.pre-show {
@@ -99,11 +92,11 @@
 }
 
 #modal-footer {
-    position:absolute;
-    bottom:0;
-    left:0;
-    right:0;
     height:45px;
     background:#a1a1a1;
-    border-radius:0 0 10px 10px;
+    border-radius:0 0 4px 4px;
+}
+
+.modal-button {
+    float:right;
 }
