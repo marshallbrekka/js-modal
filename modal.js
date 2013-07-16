@@ -35,14 +35,9 @@ it will attempt to get them from the current panes dom.
 */
 
 
-var $dom = {
-  wrapper : $("#modal-wrapper"),
-  slider : $("#modal-pane-slider"),
-  body : $("#modal-body"),
-  header : $("#modal-header"),
-  footer : $("#modal-footer"),
-  footerRow : $("#modal-footer").parent()
-};
+var $dom;
+var paneSpecs = [];
+var currentIndex;
 
 function animate(element, newCss) {
   if(!Modernizr.csstransitions) {
@@ -52,7 +47,7 @@ function animate(element, newCss) {
   }
 }
 
-function resizeModal(width, targetHeight) {
+function resizeModal(width, targetHeight, dontAnimate) {
   var realTargetHeight = targetHeight + $dom.wrapper.outerHeight() - $dom.body.outerHeight();
   var $window = $(window),
       height = Math.min($window.height() - 50, realTargetHeight);
@@ -60,7 +55,14 @@ function resizeModal(width, targetHeight) {
                 height : height + "px",
                 "margin-left" : "-" + (width / 2) + "px",
                 "margin-top" : "-" + (height / 2) + "px"};
-  animate($dom.wrapper, newCss);
+  if (dontAnimate) {
+    $dom.wrapper.addClass("notransition");
+    $dom.wrapper.css(newCss);
+    $dom.wrapper.height();
+    $dom.wrapper.removeClass("notransition");
+  } else {
+    animate($dom.wrapper, newCss);
+  }
 }
 
 // Takes a string or a dom node and sets it as the child of the header.
@@ -85,11 +87,10 @@ function makeButtons(specs) {
   });
 }
 
-// Takes a list of button specs and set the footer to those buttons.
+// Takes a list of buttons and sets the footer to those buttons.
 // If no buttons are provided it hides the footer.
-function setButtons(specs) {
-  var buttons = makeButtons(specs);
-    $dom.footer.empty();
+function setButtons(buttons) {
+  $dom.footer.empty();
   if (buttons.length) {
     $dom.footer.append(buttons);
     $dom.footerRow.show();
@@ -105,14 +106,17 @@ function setButtons(specs) {
    in the slider element.
 */
 function setupPaneSwap(direction, width, view, currentView) {
-  var oldWidth = $dom.wrapper.width();
-  currentView.removeClass("left right")
-             .addClass(direction === -1 ? "left" : "right");
+  var slideWidth = currentView ? $dom.wrapper.width() + width : width;
   $dom.slider.addClass("notransition")
-             .css({width : (oldWidth + width) + "px", left : direction === -1 ? 0 : width})
+             .css({width : slideWidth + "px", left : direction === -1 ? 0 : width})
              .height(); // trigger reflow so that the notransition
                         // class takes affect
   $dom.slider.removeClass("notransition");
+  if (currentView) {
+    currentView.removeClass("left right")
+               .addClass(direction === -1 ? "left" : "right");
+  }
+
   $(".modal-pane").not(currentView).removeClass("left right");
   view.addClass(direction === -1 ? "right" : "left")
       .addClass("pre-show");
@@ -142,6 +146,90 @@ function swapPanes(options) {
   }
   setTitle(options.title);
   resizeModal(options.width, options.desiredHeight);
-  animate($dom.slider, {left : "-" + (options.direction === -1 ? oldWidth : 0) + "px"});
+  animate($dom.slider, {left : "-" + (options.direction === -1 ? oldWidth : 0) + "px"}, $dom.currentView);
+}
+
+
+
+
+
+
+
+function makePreSpinner() {
+  var opts = {
+    lines: 12, // The number of lines to draw
+    length: 14, // The length of each line
+    width: 6, // The line thickness
+    radius: 20, // The radius of the inner circle
+    corners: 1, // Corner roundness (0..1)
+    rotate: 0, // The rotation offset
+    direction: 1, // 1: clockwise, -1: counterclockwise
+    color: '#000', // #rgb or #rrggbb
+    speed: 1, // Rounds per second
+    trail: 60, // Afterglow percentage
+    hwaccel: true, // Whether to use hardware acceleration
+    className: 'spinner', // The CSS class to assign to the spinner
+    zIndex: 2e9, // The z-index (defaults to 2000000000)
+    top: 'auto', // Top position relative to parent in px
+    left: 'auto' // Left position relative to parent in px
+  };
+  $dom.loading = $(new Spinner(opts).spin().el)
+     .css({position : "absolute", left : "50%", top : "50%"});
+  $dom.container.append($dom.loading);
+}
+
+function createDom(loading) {
+  $dom = {}
+  $dom.headerRow = $("<tr id='modal-header-row'></tr>");
+  $dom.header = $("<td id='modal-header'>preparing</td>").appendTo($dom.headerRow);
+  $dom.body = $("<td id='modal-body'></td>");
+  $dom.slider = $("<div id='modal-pane-slider'></div>").appendTo($dom.body);
+  $dom.footerRow = $("<tr id='modal-footer-row'></tr>");
+  $dom.footer = $("<td id='modal-footer'></td>").appendTo($dom.footerRow);
+  $dom.wrapper = $("<table id='modal-wrapper'></table>")
+    .append($dom.headerRow, $("<tr></tr>").append($dom.body), $dom.footerRow);
+  $dom.container = $("<div id='modal'></div>");
+  if (loading) {
+    $dom.wrapper.addClass("loading");
+    makePreSpinner();
+  }
+  $dom.container.append($dom.wrapper);
+  $("body").append($dom.container);
+}
+
+function processSpec(spec) {
+  var view = $(spec.view);
+  $dom.slider.append(view);
+  spec.view = view;
+  spec.buttons = makeButtons(spec.buttons);
+  paneSpecs.push(spec);
+}
+
+function setPaneByIndex(index) {
+  var spec = paneSpecs[index];
+  if (!spec) throw new Error(index + " is not a valid pane spec");
+  var direction = (currentIndex || 0) < index ? -1 : 1;
+  var currentView = currentIndex ? paneSpecs[currentIndex].view : null;
+  setupPaneSwap(direction, spec.width, spec.view, currentView);
+  if(spec.preShowCallback) {
+    spec.preShowCallback();
+  } else {
+    swapPanes(spec);
+  }
+  currentIndex = 0;
+}
+
+function closeModal() {
+  if ($dom) {
+    $dom.container.remove();
+    paneSpecs = [];
+  }
+}
+
+function openModal(specs, loading) {
+  if ($dom) return;
+  createDom(loading);
+  _.each(specs, processSpec);
+  setPaneByIndex(0);
 }
 
