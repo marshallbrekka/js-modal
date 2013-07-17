@@ -1,44 +1,27 @@
-/* NOTES
-
-* all panes *
-prior to showing the pane set it to block, but visibility hidden
-and set it to the desired width
-grab its dimmensions and calculate the desired width and height
-(taking into account current window size, and any other size
-restrictions imposed on the modal). We will then transition the modal
-size either using css3 transitions or js animations
-
-The same applies when resizing the modal on the current pane, the
-real dimmensions of the pane are calculated and resized according to
-the same rules
-
-
-* iframes *
-because we can't get the height of the content from outside the iframe
-we need to ask the iframe (or have it tell us) the dimmensions of its 
-html element (clientHeight and clientWidth);
-
-Instead of coding specifically for iframes when a pane is defined
-it can supply a callback that the modal will call after setting up the
-initial dimmensions of the pane while still invisible. Once the modal
-has called the callback fn, it will wait until a public fn is called
-that takes the desired width and height of the modal.
-At this point those dimmensions will be evaluated just like a normal
-pane and the modal will transition to those dimmensions.
-
-* resizing *
-I suppose it might be useful to request a modal resize its current
-window. When resizing it is assumed the modal content has already been
-updated. If no dimmensions are specified when calling the resizing fn
-it will attempt to get them from the current panes dom.
-
-*/
-
-
 var $dom;
 var paneSpecs = [];
 var currentIndex = null;
-var _defaults = {windowPadding : 50}
+var _defaults = {windowPadding : 50,
+                 loadingView : (function() {
+                   var opts = {
+                     lines: 12, // The number of lines to draw
+                     length: 14, // The length of each line
+                     width: 6, // The line thickness
+                     radius: 20, // The radius of the inner circle
+                     corners: 1, // Corner roundness (0..1)
+                     rotate: 0, // The rotation offset
+                     direction: 1, // 1: clockwise, -1: counterclockwise
+                     color: '#666666', // #rgb or #rrggbb
+                     speed: 1, // Rounds per second
+                     trail: 60, // Afterglow percentage
+                     hwaccel: true, // Whether to use hardware acceleration
+                     className: 'spinner', // The CSS class to assign to the spinner
+                     zIndex: 2e9 // The z-index (defaults to 2000000000)
+                   };
+                   var spinner = $(new Spinner(opts).spin().el)
+                     .css({position : "absolute", left : "50%", top : "50%"});
+                   return $("<div id='modal-pane-loading'></div>").append(spinner);
+                 })()}
 var settings = {};
 
 function mergeSettings(names, customSettings) {
@@ -72,17 +55,29 @@ function animate($element, newCss, dontAnimate) {
   }
 }
 
-function paneHeight(spec, overrideHeight) {
+function elementHeight($element) {
+  var scrollHeight = $element[0].scrollHeight;
+  if (scrollHeight !== 0) {
+    return $element.outerHeight();
+  }
+  return scrollHeight;
+}
+
+function paneHeights(spec, overrideHeight) {
   animate(spec.view, {height : "2px"}, true);
   var height = overrideHeight ||
                spec.desiredHeight ||
                settings.height ||
-               spec.view[0].scrollHeight;
-  var guiHeight = $dom.wrapper.outerHeight() - $dom.body.outerHeight();
-  var realTargetHeight = height + guiHeight;
+               spec.view[0].scrollHeight,
+      header = elementHeight($dom.header),
+      footer = elementHeight($dom.footer),
+      guiHeight = header + footer,
+      realTargetHeight = height + guiHeight;
   height = Math.min($(window).height() - settings.windowPadding, realTargetHeight);
   return {modal : height,
-          pane : height - guiHeight};
+          pane : height - guiHeight,
+          header : header, 
+          footer : footer};
 }
 
 function resizeModal(width, height, dontAnimate) {
@@ -121,10 +116,9 @@ function setButtons(buttonSpecs) {
   var buttons = makeButtons(buttonSpecs);
   $dom.footer.empty();
   if (buttons.length) {
-    $dom.footer.append(buttons);
-    $dom.footerRow.show();
+    $dom.footer.append(buttons).show();
   } else {
-    $dom.footerRow.hide();
+    $dom.footer.hide();
   }
 }
 
@@ -175,7 +169,8 @@ function swapPanes(direction, spec) {
   }
   var dontAnimate = currentIndex === null ? true : false
   setTitle(spec.title);
-  var newHeights = paneHeight(spec);
+  var newHeights = paneHeights(spec);
+  animate($dom.body, {bottom : newHeights.footer + "px"});
   animate(spec.view, {height : newHeights.pane + "px"}, true);
   resizeModal(spec.width, newHeights.modal, dontAnimate);
   animate($dom.slider, {left : "-" + (direction === -1 ? oldWidth : 0) + "px"}, dontAnimate);
@@ -206,16 +201,13 @@ function makePreSpinner() {
 
 function createDom(loading) {
   $dom = {}
-  $dom.headerRow = $("<tr id='modal-header-row'></tr>");
-  $dom.header = $("<td id='modal-header'>preparing</td>").appendTo($dom.headerRow);
-  $dom.body = $("<td id='modal-body'></td>");
+  $dom.header = $("<div id='modal-header'></div>");
+  $dom.body = $("<div id='modal-body'></div>");
   $dom.slider = $("<div id='modal-pane-slider'></div>").appendTo($dom.body);
-  $dom.footerRow = $("<tr id='modal-footer-row'></tr>");
-  $dom.footer = $("<td id='modal-footer'></td>").appendTo($dom.footerRow);
+  $dom.footer = $("<div id='modal-footer'></div>");
   $dom.closeButton = $("<div id='modal-close'></div>");
-  var table = $("<table></table>")
-    .append( $dom.headerRow, $("<tr></tr>").append($dom.body), $dom.footerRow)
-  $dom.wrapper = $("<div id='modal-wrapper'></div>").append($dom.closeButton, table);
+  $dom.wrapper = $("<div id='modal-wrapper'></div>")
+    .append($dom.closeButton, $dom.header, $dom.body, $dom.footer);
   $dom.container = $("<div id='modal'></div>");
   if (loading) {
     $dom.wrapper.addClass("modal-loading");
@@ -226,6 +218,7 @@ function createDom(loading) {
 }
 
 function processSpec(spec) {
+  if (!spec.width) throw new Error("You must define a width for each pane spec");
   var newSpec = jQuery.extend(true, {}, spec);
   var view = $("<div class='modal-pane'></div>").append($(spec.view));
   $dom.slider.append(view);
@@ -236,9 +229,19 @@ function processSpec(spec) {
 
 /** Public API Functions **/
 
+function showLoading(paneIndex) {
+  var view = paneSpecs[paneIndex === null ? currentIndex : paneIndex].view;
+  view.append(settings.loadingView).css({overflow : "hidden"})[0].scrollTop = 0;
+}
+
+function hideLoading() {
+  settings.loadingView.detach();
+  paneSpecs[currentIndex].view.css("overflow","");
+}
+
 function updateHeight(desiredHeight) {
   var pane = paneSpecs[currentIndex].view;
-  var heights = paneHeight(paneSpecs[currentIndex], desiredHeight)
+  var heights = paneHeights(paneSpecs[currentIndex], desiredHeight)
   animate(pane, {height : ""}, true);
   resizeModal($dom.wrapper.width(), heights.modal);
 }
@@ -273,13 +276,17 @@ function showModal() {
 }
 
 function openModal(specs, settings, loading) {
-  mergeSettings(["windowPadding", "width", "height"], settings || {});
+  mergeSettings(["windowPadding", "width", "height", "loadingView"], settings || {});
   if ($dom) return;
   createDom(loading);
   $dom.closeButton.click(closeModal);
   _.each(specs, processSpec);
   setPaneByIndex(0);
 }
+
+
+/** Demo variables and functions **/
+
 
 var sampleSpecs = [{view : "<div class='one'>Oh Hello <img height=300 src='pane-1.jpg'/><script>setTimeout(function(){$(\".one\").height(500);},2000)</script></div>",
                     width : 450,
@@ -290,6 +297,7 @@ var sampleSpecs = [{view : "<div class='one'>Oh Hello <img height=300 src='pane-
                    {view : "<div class='two'>My second pane <img src='pane-2.jpg'/></div>",
                     width: 600,
                     desiredHeight : 300,
+                    loading : true,
                     title : "new title wooo",
                     buttons : [{text: "next", click: function() {setPaneByIndex(2)}},
                                {text : "back", "class" : "someclass", click: function() {setPaneByIndex(0)}}]},
@@ -304,7 +312,10 @@ function demoNormal() {
 
 function demoPreLoad() {
   openModal(sampleSpecs, {}, true);
-  setTimeout(showModal, 3000);
+  setTimeout(function() {
+    updateHeight(); 
+    showModal();
+  }, 3000);
 }
 
 function demoLargeHeight() {
