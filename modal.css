@@ -4,6 +4,10 @@
     bottom:0;
     left:0;
     right:0;
+    background:none;
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#BF000000,endColorstr=#BF000000);
+    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(enabled=false)" !important; /* ie9 requires quotes */
+    zoom: 1;
     background:rgba(0,0,0,0.75);
 }
 
@@ -12,7 +16,7 @@
     top:50%;
     left:50%;
 
-/* customizable */
+/* customizable - widht, height, and margins are sort of initial defaults */
     width:400px;
     height:200px;
     margin-top:-100px;
@@ -30,10 +34,9 @@
     -webkit-transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
     -o-transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
     transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
-/*    transition-timing-function: ease-out;*/
 }
 
-.modal-notransition {
+.modal-notransition, .modal-pane > div {
   -webkit-transition: none !important;
   -moz-transition: none !important;
   -o-transition: none !important;
@@ -94,6 +97,10 @@
     overflow:auto;
 }
 
+.modal-pane-wrapper {
+    padding:20px;
+}
+
 .modal-pane.pre-show {
     visibility:hidden;
 }
@@ -108,14 +115,6 @@
     left:0;
 }
 
-.one {
-    background:rgba(100,0,0,0.5);
-}
-
-.two {
-    background:rgba(0,200,0,0.5);
-}
-
 #modal-footer {
     position:absolute;
     bottom:0;
@@ -128,4 +127,22 @@
 
 .modal-button {
     float:right;
+}
+
+/** Demo specific styles **/
+
+.one {
+    background:red;
+}
+
+.two {
+    background:green;
+}
+
+.hide-header #modal-header {
+    display:none;
+}
+
+.large-header #modal-header {
+    height:150px;
 }
