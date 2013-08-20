@@ -1,4 +1,4 @@
-#modal {
+.s_simple_modal {
     position:absolute;
     top:0;
     bottom:0;
@@ -11,12 +11,12 @@
     background:rgba(0,0,0,0.75);
 }
 
-#modal-wrapper {
+.s_simple_modal_wrapper {
     position:absolute;
     top:50%;
     left:50%;
 
-/* customizable - widht, height, and margins are sort of initial defaults */
+/* customizable - width, height, and margins are sort of initial defaults */
     width:400px;
     height:200px;
     margin-top:-100px;
@@ -25,18 +25,18 @@
     box-shadow:0 2px 10px 0px rgba(0,0,0,0.5);
 }
 
-#modal-wrapper.modal-loading {
+.s_simple_modal_loading {
     visibility:hidden;
 }
 
-#modal-wrapper, #modal-pane-slider {
+.s_simple_modal_wrapper, .s_simple_modal_pane_slider {
     -moz-transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
     -webkit-transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
     -o-transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
     transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
 }
 
-.modal-notransition, .modal-pane > div {
+.s_simple_modal_notransition, .ms_simple_odal_pane > div {
   -webkit-transition: none !important;
   -moz-transition: none !important;
   -o-transition: none !important;
@@ -44,7 +44,7 @@
   transition: none !important;
 }
 
-#modal-close {
+.s_simple_modal_close {
     z-index:1000;
     position:absolute;
     right:10px;
@@ -54,13 +54,13 @@
     background:#730000;
 }
 
-#modal-header {
+.s_simple_modal_header {
     height:45px;
     background:#a6a6a6;
     border-radius:4px 4px 0 0;
 }
 
-#modal-body {
+.s_simple_modal_body {
     position:absolute;
     top:45px;
     left:0;
@@ -70,7 +70,7 @@
     overflow:hidden;
 }
 
-#modal-pane-slider {
+.s_simple_modal_pane_slider {
     position:absolute;
     top:0;
     bottom:0;
@@ -79,7 +79,7 @@
     transition-timing-function: ease-out;
 }
 
-#modal-pane-loading {
+.s_simple_modal_pane_loading {
     position:absolute;
     top:0;
     bottom:0;
@@ -89,7 +89,7 @@
     background:#fff;
 }
 
-.modal-pane {
+.s_simple_modal_pane {
     display:none;
     position:absolute;
     top:0;
@@ -97,25 +97,25 @@
     overflow:auto;
 }
 
-.modal-pane-wrapper {
+.s_simple_modal_pane_wrapper {
     padding:20px;
 }
 
-.modal-pane.pre-show {
+.s_simple_modal_pane.pre_show {
     visibility:hidden;
 }
 
-.modal-pane.right {
+.s_simple_modal_pane.right {
     display:block;
     right:0;
 }
 
-.modal-pane.left {
+.s_simple_modal_pane.left {
     display:block;
     left:0;
 }
 
-#modal-footer {
+.s_simple_modal_footer {
     position:absolute;
     bottom:0;
     left:0;
@@ -125,24 +125,6 @@
     border-radius:0 0 4px 4px;
 }
 
-.modal-button {
+.s_simple_modal_button {
     float:right;
-}
-
-/** Demo specific styles **/
-
-.one {
-    background:red;
-}
-
-.two {
-    background:green;
-}
-
-.hide-header #modal-header {
-    display:none;
-}
-
-.large-header #modal-header {
-    height:150px;
 }

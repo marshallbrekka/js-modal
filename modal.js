@@ -18,6 +18,8 @@ preShowCallback : (optional) a function that will be called before
                   pane height as its argument.
 */
 
+(function() {
+
 var $dom;
 var paneSpecs = [];
 var currentIndex = null;
@@ -40,9 +42,10 @@ var _defaults = {windowPadding : 50,
                    };
                    var spinner = $(new Spinner(opts).spin().el)
                      .css({position : "absolute", left : "50%", top : "50%"});
-                   return $("<div id='modal-pane-loading'></div>").append(spinner);
+                   return $("<div class='s_modal_pane_loading'></div>").append(spinner);
                  }};
 var settings = {};
+var loadingClass = "s_simple_modal_loading";
 
 function mergeSettings(names, customSettings) {
   settings = {};
@@ -59,13 +62,13 @@ function css($element, newCss, animate) {
     if (animate) {
       $element.css(newCss);
     } else {
-      $element.addClass("modal-notransition").css(newCss);
+      $element.addClass("s_simple_modal_notransition").css(newCss);
       $element.height();
-      $element.removeClass("modal-notransition");    }
+      $element.removeClass("s_simple_modal_notransition");    }
   } else {
     // Set the no transition class here as well to allow easy
     // testing of jquery animation.
-    $element.addClass("modal-notransition");
+    $element.addClass("s_simple_modal_notransition");
     if(animate) {
       $element.animate(newCss, 150, "linear");
     } else {
@@ -117,7 +120,7 @@ function setTitle(content) {
 
 function makeButtons(specs) {
   return _.map(specs, function(spec) {
-    var button = $("<button class='modal-button'><span>" + spec.text + "</span></button>");
+    var button = $("<button class='s_simple_modal_button'><span>" + spec.text + "</span></button>");
     if (spec["class"]) {
       button.addClass(spec["class"]);
     }
@@ -154,7 +157,7 @@ function setupPaneSwap(direction, width, view, currentView) {
   if (currentView) {
     currentView.addClass(direction === -1 ? "left" : "right");
   }
-  view.addClass(direction === -1 ? "right" : "left").addClass("pre-show");
+  view.addClass(direction === -1 ? "right" : "left").addClass("pre_show");
   view[0].scrollTop = 0;
 }
 
@@ -173,13 +176,13 @@ function setupPaneSwap(direction, width, view, currentView) {
 */
 function swapPanes(direction, spec) {
   var oldWidth = $dom.wrapper.outerWidth();
-  spec.view.removeClass("pre-show");
+  spec.view.removeClass("pre_show");
   setButtons(spec.buttons);
-  if ($dom.wrapper.hasClass("modal-loading")) {
-    $dom.wrapper.removeClass();
-    $dom.wrapper.addClass("modal-loading");
+  if ($dom.wrapper.hasClass(loadingClass)) {
+    $dom.wrapper.removeClass(loadingClass);
+    $dom.wrapper.addClass(loadingClass);
   } else {
-    $dom.wrapper.removeClass();
+    $dom.wrapper.removeClass(loadingClass);
   }
   if (spec.modalClass) {
     $dom.wrapper.addClass(spec.modalClass);
@@ -218,16 +221,16 @@ function makePreSpinner() {
 
 function createDom(loading) {
   $dom = {}
-  $dom.header = $("<div id='modal-header'></div>");
-  $dom.body = $("<div id='modal-body'></div>");
-  $dom.slider = $("<div id='modal-pane-slider'></div>").appendTo($dom.body);
-  $dom.footer = $("<div id='modal-footer'></div>");
-  $dom.closeButton = $("<div id='modal-close'></div>");
-  $dom.wrapper = $("<div id='modal-wrapper'></div>")
+  $dom.header = $("<div class='s_simple_modal_header'></div>");
+  $dom.body = $("<div class='s_simple_modal_body'></div>");
+  $dom.slider = $("<div class='s_simple_modal_pane_slider'></div>").appendTo($dom.body);
+  $dom.footer = $("<div class='s_simple_modal_footer'></div>");
+  $dom.closeButton = $("<div class='s_simple_modal_close'></div>");
+  $dom.wrapper = $("<div class='s_simple_modal_wrapper' ></div>")
     .append($dom.closeButton, $dom.header, $dom.body, $dom.footer);
-  $dom.container = $("<div id='modal'></div>");
+  $dom.container = $("<div class='s_simple_modal'></div>");
   if (loading) {
-    $dom.wrapper.addClass("modal-loading");
+    $dom.wrapper.addClass(loadingClass);
     makePreSpinner();
   }
   $dom.container.append($dom.wrapper);
@@ -237,11 +240,18 @@ function createDom(loading) {
 function processSpec(spec) {
   if (!spec.width) throw new Error("You must define a width for each pane spec");
   var newSpec = jQuery.extend(true, {}, spec);
-  var paneWrapper = $("<div class='modal-pane-wrapper'></div>").append($(spec.view)).addClass(spec["class"]);
-  var view = $("<div class='modal-pane'></div>").append(paneWrapper);
+  var paneWrapper = $("<div class='s_simple_modal_pane_wrapper'></div>").append($(spec.view)).addClass(spec["class"]);
+  var view = $("<div class='s_simple_modal_pane'></div>").append(paneWrapper);
   $dom.slider.append(view);
   newSpec.view = view;
   paneSpecs.push(newSpec);
+}
+
+function closeIfEsc(e) {
+  if(e.keyCode == 27) {
+    $(window).off(".simple_modal");
+    closeModal();
+  }
 }
 
 
@@ -311,11 +321,14 @@ function closeModal() {
 
 function showModal() {
   $dom.loading.remove();
-  $dom.wrapper.removeClass("modal-loading");
+  $dom.wrapper.removeClass(loadingClass);
 }
 
 function openModal(specs, settings, loading) {
   mergeSettings(["windowPadding", "width", "height", "loadingView"], settings || {});
+
+  $(window).on("keydown.simple_modal", closeIfEsc);
+
   if ($dom) return;
   createDom(loading);
   $dom.closeButton.click(closeModal);
@@ -323,77 +336,16 @@ function openModal(specs, settings, loading) {
   setPaneByIndex(0);
 }
 
+window.SimpleModal = {
+  showLoading: showLoading,
+  hideLoading: hideLoading,
+  updateHeight: updateHeight,
+  setPaneByIndex: setPaneByIndex,
+  next: next,
+  previous: previous,
+  close: closeModal,
+  show: showModal,
+  open: openModal
+};
 
-/** Demo variables and functions **/
-
-
-var sampleSpecs = [{view : "<div class='one'>Oh Hello <img height=300 src='pane-1.jpg'/><script>setTimeout(function(){$(\".one\").height(500);},2000)</script></div>",
-                    width : 450,
-                    title : "my awesome title",
-                    "class" : "my-modal-class",
-                    buttons : [{text : "next", click:function(){setPaneByIndex(1)}},
-                               {text :"adjust height", click:function(){updateHeight()}}]},
-                   {view : "<div class='two'>My second pane <img src='pane-2.jpg'/></div>",
-                    width: 600,
-                    desiredHeight : 300,
-                    loading : true,
-                    title : "new title wooo",
-                    buttons : [{text: "next", click: function() {
-                                 setPaneByIndex(2, true);
-                                 setTimeout(hideLoading, 3000);
-                               }},
-                               {text : "back", "class" : "someclass", click: function() {setPaneByIndex(0)}},
-                               {text : "loading", click : function() {
-                                 showLoading();
-                                 setTimeout(hideLoading, 2000);
-                               }}]},
-                   {view : "<div>My third pane</div>",
-                    width: 400,
-                    desiredHeight : 450}];
-
-
-function demoNormal() {
-  openModal(sampleSpecs);
-}
-
-function demoPreLoad() {
-  openModal(sampleSpecs, {}, true);
-  setTimeout(function() {
-    showModal();
-  }, 3000);
-}
-
-function demoLargeHeight() {
-  openModal([{view : $("<div>My craxy tall content</div>").css("height", "1000px"),
-              width:300,
-              buttons : [{text : "Next", click: function(){setPaneByIndex(1)}}]},
-             sampleSpecs[1]]);
-}
-
-function demoPaneCallback() {
-  openModal([sampleSpecs[0],
-             {view : "<div>This modal height was set from a callback which waits for 1s before setting the height.</div>",
-              width:400,
-              desiredHeight:200,
-              preShowCallback : function(cb) {
-                setTimeout(function(){ cb(500)}, 1000);
-              }}])
-}
-
-function demoCustomHeader() {
-  openModal([sampleSpecs[0],
-             {view : "<div>This pane sets a class that hides the header.</div>",
-              width:400,
-              modalClass : "hide-header",
-              desiredHeight:200,
-              buttons : [{text : "next", click : function() {next()}},
-                         {text : "back", click : previous}]
-             },
-             {view : "<div>This pane increases the height of the header from a class.</div>",
-              width:400,
-              modalClass : "large-header",
-              desiredHeight:200,
-              buttons : [{text : "back", click : previous}]
-             }
-])
-}
+})();

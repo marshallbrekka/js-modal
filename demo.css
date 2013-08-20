@@ -1,0 +1,17 @@
+/** Demo specific styles **/
+
+.one {
+    background:red;
+}
+
+.two {
+    background:green;
+}
+
+.hide-header .s_simple_modal_header {
+    display:none;
+}
+
+.large-header .s_simple_modal_header {
+    height:150px;
+}
