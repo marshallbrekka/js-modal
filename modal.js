@@ -23,7 +23,8 @@ preShowCallback : (optional) a function that will be called before
 var $dom;
 var paneSpecs = [];
 var currentIndex = null;
-var _defaults = {windowPadding : 50,
+var _defaults = {
+                 windowPadding : 50,
                  loadingView : function() {
                    var opts = {
                      lines: 12, // The number of lines to draw
@@ -43,18 +44,14 @@ var _defaults = {windowPadding : 50,
                    var spinner = $(new Spinner(opts).spin().el)
                      .css({position : "absolute", left : "50%", top : "50%"});
                    return $("<div class='s_modal_pane_loading'></div>").append(spinner);
-                 }};
+                 },
+                 responsive: false
+               };
 var settings = {};
 var loadingClass = "s_simple_modal_loading";
 
-function mergeSettings(names, customSettings) {
-  settings = {};
-  _.each(names, function(name) {
-    var value = customSettings[name] || _defaults[name];
-    if (value) {
-      settings[name] = value;
-    }
-  });
+function mergeSettings(customSettings) {
+  settings = _.defaults(customSettings, _defaults);
 }
 
 function css($element, newCss, animate) {
@@ -64,7 +61,8 @@ function css($element, newCss, animate) {
     } else {
       $element.addClass("s_simple_modal_notransition").css(newCss);
       $element.height();
-      $element.removeClass("s_simple_modal_notransition");    }
+      $element.removeClass("s_simple_modal_notransition");    
+    }
   } else {
     // Set the no transition class here as well to allow easy
     // testing of jquery animation.
@@ -101,12 +99,19 @@ function paneHeights(spec, overrideHeight) {
           footer : footer};
 }
 
+function responsiveHeights(spec, overrideHeight) {
+  return {
+    modal: spec.view.get(0).scrollHeight + $dom.header.height(),
+    pane: spec.view.get(0).scrollHeight,
+    header: "auto",
+    footer: "auto"
+  };
+}
+
 function resizeModal(width, height, dontAnimate) {
   var newCss = {
-    "max-width" : width + "px",
-    "height": height + "px",
-    "margin-left" : "-" + (width / 2) + "px",
-    "margin-top" : "-" + (height / 2) + "px"
+    "max-width" : _.isNumber(width) ? width + "px" : width,
+    "height"    : _.isNumber(height) ? height + "px" : height
   };
   css($dom.wrapper, newCss, !dontAnimate);
 }
@@ -129,7 +134,7 @@ function makeButtons(specs) {
     if (spec.click) {
       button.click(spec.click);
     }
-    return button
+    return button;
   });
 }
 
@@ -155,7 +160,7 @@ function setupPaneSwap(direction, width, view, currentView) {
   var slideWidth = currentView ? $dom.wrapper.width() + width : width;
   css(view, {"max-width": width + "px"});
   css($dom.slider, {"max-width" : slideWidth + "px", left : "-" + (direction === -1 ? 0 : width) + "px"});
-  _.each(paneSpecs, function(spec) {spec.view.removeClass("right").removeClass("left")});
+  _.each(paneSpecs, function(spec) {spec.view.removeClass("right").removeClass("left");});
   if (currentView) {
     currentView.addClass(direction === -1 ? "left" : "right");
   }
@@ -191,9 +196,9 @@ function swapPanes(direction, spec) {
   }
   var animate = currentIndex === null ? false : true;
   setTitle(spec.title);
-  var newHeights = paneHeights(spec);
-  css($dom.body, {bottom : newHeights.footer + "px", top: newHeights.header + "px"}, true);
-  css(spec.view, {height : newHeights.pane + "px"});
+  var newHeights = settings.responsive ? responsiveHeights(spec) : paneHeights(spec);
+  css($dom.body, {height : newHeights.pane + "px"}, true);
+  css(spec.view, {height : newHeights.modal + "px"});
   resizeModal(spec.width, newHeights.modal, !animate);
   css($dom.slider, {left : "-" + (direction === -1 ? oldWidth : 0) + "px"}, animate);
 }
@@ -222,7 +227,7 @@ function makePreSpinner() {
 }
 
 function createDom(loading) {
-  $dom = {}
+  $dom = {};
   $dom.header = $("<div class='s_simple_modal_header'></div>");
   $dom.body = $("<div class='s_simple_modal_body'></div>");
   $dom.slider = $("<div class='s_simple_modal_pane_slider'></div>").appendTo($dom.body);
@@ -234,6 +239,10 @@ function createDom(loading) {
   if (loading) {
     $dom.wrapper.addClass(loadingClass);
     makePreSpinner();
+  }
+
+  if(settings.responsive) {
+    $dom.container.addClass("s_simple_modal_responsive");
   }
   $dom.container.append($dom.wrapper);
   $("body").append($dom.container);
@@ -260,9 +269,9 @@ function closeIfEsc(e) {
 /** Public API Functions **/
 
 function showLoading(paneIndex) {
-  var spec = paneSpecs[paneIndex === undefined ? currentIndex : paneIndex]
-  var loadingView = typeof(settings.loadingView) === "function"
-    ? settings.loadingView() : $(settings.loadingView);
+  var spec = paneSpecs[paneIndex === undefined ? currentIndex : paneIndex];
+  var loadingView = typeof(settings.loadingView) === "function" ? 
+                    settings.loadingView() : $(settings.loadingView);
   spec.view.append(loadingView).css({overflow : "hidden"})[0].scrollTop = 0;
   spec._loadingView = loadingView;
 }
@@ -275,7 +284,8 @@ function hideLoading() {
 
 function updateHeight(desiredHeight) {
   var pane = paneSpecs[currentIndex].view;
-  var heights = paneHeights(paneSpecs[currentIndex], desiredHeight)
+  var heightFunc = settings.reponsive ? responsiveHeights : paneHeights;
+  var heights = heightsFunc(paneSpecs[currentIndex], desiredHeight);
   css(pane, {height : ""});
   resizeModal($dom.wrapper.width(), heights.modal);
 }
@@ -293,7 +303,7 @@ function setPaneByIndex(index, showLoadingPane) {
   if(spec.preShowCallback) {
     spec.preShowCallback(
       function(paneHeight) {
-        spec.desiredHeight = paneHeight
+        spec.desiredHeight = paneHeight;
         swapPanes(direction, spec);
         currentIndex = index;
       }
@@ -327,7 +337,7 @@ function showModal() {
 }
 
 function openModal(specs, settings, loading) {
-  mergeSettings(["windowPadding", "width", "height", "loadingView"], settings || {});
+  mergeSettings(settings || {});
 
   $(window).on("keydown.simple_modal", closeIfEsc);
 

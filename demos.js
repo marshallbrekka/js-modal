@@ -34,7 +34,7 @@ function demoNormal() {
 function demoPreLoad() {
   SimpleModal.open(sampleSpecs, {}, true);
   setTimeout(function() {
-    SimpleModal.showModal();
+    SimpleModal.show();
   }, 3000);
 }
 
@@ -48,10 +48,11 @@ function demoLargeHeight() {
 
 function demoLargeHeightNoButtons() {
   SimpleModal.open([{
-              view : $("<div>My crazy tall content</div>").css("height", "1000px"),
-              width:300
-             },
-             sampleSpecs[1]]);
+               view : $("<div>My crazy tall content</div>").css("height", "1000px"),
+               width:300
+             }], { 
+               responsive: true 
+             });
 }
 
 function demoPaneCallback() {
