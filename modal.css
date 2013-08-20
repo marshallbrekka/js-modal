@@ -36,7 +36,7 @@
     transition: width 0.2s, height 0.2s, margin-top 0.2s, margin-left 0.2s, left 0.2s, right 0.2s;
 }
 
-.s_simple_modal_notransition, .ms_simple_odal_pane > div {
+.s_simple_modal_notransition, .s_simple_modal_pane > div {
   -webkit-transition: none !important;
   -moz-transition: none !important;
   -o-transition: none !important;
@@ -75,7 +75,8 @@
     top:0;
     bottom:0;
     left:0;
-    width:1000px;
+    width: 100%;
+    max-width:1000px;
     transition-timing-function: ease-out;
 }
 
@@ -95,6 +96,7 @@
     top:0;
     bottom:0;
     overflow:auto;
+    width: 100%;
 }
 
 .s_simple_modal_pane_wrapper {

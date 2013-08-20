@@ -102,10 +102,12 @@ function paneHeights(spec, overrideHeight) {
 }
 
 function resizeModal(width, height, dontAnimate) {
-  var newCss = {width : width + "px",
-                height : height + "px",
-                "margin-left" : "-" + (width / 2) + "px",
-                "margin-top" : "-" + (height / 2) + "px"};
+  var newCss = {
+    "max-width" : width + "px",
+    "height": height + "px",
+    "margin-left" : "-" + (width / 2) + "px",
+    "margin-top" : "-" + (height / 2) + "px"
+  };
   css($dom.wrapper, newCss, !dontAnimate);
 }
 
@@ -151,8 +153,8 @@ function setButtons(buttonSpecs) {
 */
 function setupPaneSwap(direction, width, view, currentView) {
   var slideWidth = currentView ? $dom.wrapper.width() + width : width;
-  css(view, {width: width + "px"});
-  css($dom.slider, {width : slideWidth + "px", left : "-" + (direction === -1 ? 0 : width) + "px"});
+  css(view, {"max-width": width + "px"});
+  css($dom.slider, {"max-width" : slideWidth + "px", left : "-" + (direction === -1 ? 0 : width) + "px"});
   _.each(paneSpecs, function(spec) {spec.view.removeClass("right").removeClass("left")});
   if (currentView) {
     currentView.addClass(direction === -1 ? "left" : "right");

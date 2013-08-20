@@ -45,6 +45,15 @@ function demoLargeHeight() {
              sampleSpecs[1]]);
 }
 
+
+function demoLargeHeightNoButtons() {
+  SimpleModal.open([{
+              view : $("<div>My crazy tall content</div>").css("height", "1000px"),
+              width:300
+             },
+             sampleSpecs[1]]);
+}
+
 function demoPaneCallback() {
   SimpleModal.open([sampleSpecs[0],
              {view : "<div>This modal height was set from a callback which waits for 1s before setting the height.</div>",
