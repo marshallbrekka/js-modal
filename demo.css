@@ -8,10 +8,10 @@
     background:green;
 }
 
-.hide-header .s_simple_modal_header {
+.hide-header #s_simple_modal_header {
     display:none;
 }
 
-.large-header .s_simple_modal_header {
+.large-header #s_simple_modal_header {
     height:150px;
 }

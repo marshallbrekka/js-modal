@@ -42,7 +42,7 @@ var _defaults = {windowPadding : 50,
                    };
                    var spinner = $(new Spinner(opts).spin().el)
                      .css({position : "absolute", left : "50%", top : "50%"});
-                   return $("<div class='s_modal_pane_loading'></div>").append(spinner);
+                   return $("<div id='s_simple_modal_pane_loading'></div>").append(spinner);
                  }};
 var settings = {};
 var loadingClass = "s_simple_modal_loading";
@@ -179,10 +179,10 @@ function swapPanes(direction, spec) {
   spec.view.removeClass("pre_show");
   setButtons(spec.buttons);
   if ($dom.wrapper.hasClass(loadingClass)) {
-    $dom.wrapper.removeClass(loadingClass);
+    $dom.wrapper.removeClass();
     $dom.wrapper.addClass(loadingClass);
   } else {
-    $dom.wrapper.removeClass(loadingClass);
+    $dom.wrapper.removeClass();
   }
   if (spec.modalClass) {
     $dom.wrapper.addClass(spec.modalClass);
@@ -221,14 +221,14 @@ function makePreSpinner() {
 
 function createDom(loading) {
   $dom = {}
-  $dom.header = $("<div class='s_simple_modal_header'></div>");
-  $dom.body = $("<div class='s_simple_modal_body'></div>");
-  $dom.slider = $("<div class='s_simple_modal_pane_slider'></div>").appendTo($dom.body);
-  $dom.footer = $("<div class='s_simple_modal_footer'></div>");
-  $dom.closeButton = $("<div class='s_simple_modal_close'></div>");
-  $dom.wrapper = $("<div class='s_simple_modal_wrapper' ></div>")
+  $dom.header = $("<div id='s_simple_modal_header'></div>");
+  $dom.body = $("<div id='s_simple_modal_body'></div>");
+  $dom.slider = $("<div id='s_simple_modal_pane_slider'></div>").appendTo($dom.body);
+  $dom.footer = $("<div id='s_simple_modal_footer'></div>");
+  $dom.closeButton = $("<div id='s_simple_modal_close'></div>");
+  $dom.wrapper = $("<div id='s_simple_modal_wrapper' ></div>")
     .append($dom.closeButton, $dom.header, $dom.body, $dom.footer);
-  $dom.container = $("<div class='s_simple_modal'></div>");
+  $dom.container = $("<div id='s_simple_modal'></div>");
   if (loading) {
     $dom.wrapper.addClass(loadingClass);
     makePreSpinner();

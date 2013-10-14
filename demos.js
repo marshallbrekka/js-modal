@@ -34,7 +34,7 @@ function demoNormal() {
 function demoPreLoad() {
   SimpleModal.open(sampleSpecs, {}, true);
   setTimeout(function() {
-    SimpleModal.showModal();
+    SimpleModal.show();
   }, 3000);
 }
 
