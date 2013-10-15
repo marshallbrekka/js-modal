@@ -1,18 +1,21 @@
 <!doctype html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, user-scalable=false;">
 <link href="modal.css" rel="stylesheet" type="text/css"></link>
 <link href="demo.css" rel="stylesheet" type="text/css"></link>
 <script src="modernizr.js"></script>
 </head>
 <body>
- 
-<button onclick="demoNormal()">Normal Modal</button>
-<button onclick="demoPreLoad()">PreLoader Modal</button>
-<button onclick="demoLargeHeight()">LargeHeight Modal</button>
-<button onclick="demoPaneCallback()">Set height from callback</button>
-<button onclick="demoCustomHeader()">Custom headers with class</button>
-
+<div id="toplevel">
+  <button onclick="demoNormal()">Normal Modal</button>
+  <button onclick="demoPreLoad()">PreLoader Modal</button>
+  <button onclick="demoLargeHeight()">LargeHeight Modal</button>
+  <button onclick="demoPaneCallback()">Set height from callback</button>
+  <button onclick="demoCustomHeader()">Custom headers with class</button>
+  <div class="largeDiv" style="padding-top:200px; height:2000px">
+    <button onclick="demoResponsive()">Responsive</button>
+  </div>
 <script src="jquery-1.9.1.js"></script>
 <script src="underscore.js"></script>
 <script src="spin.js"></script>

@@ -24,6 +24,8 @@ var $dom;
 var paneSpecs = [];
 var currentIndex = null;
 var _defaults = {windowPadding : 50,
+                 mobileCutoff : 700,
+                 topLevelElement : null,
                  loadingView : function() {
                    var opts = {
                      lines: 12, // The number of lines to draw
@@ -51,7 +53,7 @@ function mergeSettings(names, customSettings) {
   settings = {};
   _.each(names, function(name) {
     var value = customSettings[name] || _defaults[name];
-    if (value) {
+    if (value != null && value != undefined) {
       settings[name] = value;
     }
   });
@@ -73,6 +75,23 @@ function css($element, newCss, animate) {
       $element.animate(newCss, 150, "linear");
     } else {
       $element.css(newCss);
+    }
+  }
+}
+
+function scrollTop(newPosition) {
+  if (window.pageYOffset !== undefined) {
+    if (newPosition === 0 || newPosition) {
+      window.scroll(0, newPosition);
+    } else {
+      return window.pageYOffset;
+    }
+  } else {
+    var element = document.documentElement ? document.documentElement : document.body;
+    if (newPosition === 0 || newPosition) {
+      element.scrollTop = newPosition;
+    } else {
+      return element.scrollTop;
     }
   }
 }
@@ -99,6 +118,32 @@ function paneHeights(spec, overrideHeight) {
           pane : height - guiHeight,
           header : header, 
           footer : footer};
+}
+
+function setModalMode() {
+  settings._mobileMode = $(window).width() < settings.mobileCutoff;
+}
+
+function alterTopLevelElement() {
+  var el = settings.topLevelElement;
+  if (el) {
+    settings._preModalScroll = scrollTop();
+    css(el, {position : "fixed",
+             top : "-" + settings._preModalScroll + "px",
+             left : 0,
+             right : 0});
+  }
+}
+
+function resetTopLevelElement() {
+  var el = settings.topLevelElement;
+  if (el) {
+    css(el, {position : "",
+             top : "",
+             left : "",
+             right : ""});
+    scrollTop(settings._preModalScroll);
+  }
 }
 
 function resizeModal(width, height, dontAnimate) {
@@ -150,9 +195,14 @@ function setButtons(buttonSpecs) {
    in the slider element.
 */
 function setupPaneSwap(direction, width, view, currentView) {
-  var slideWidth = currentView ? $dom.wrapper.width() + width : width;
-  css(view, {width: width + "px"});
-  css($dom.slider, {width : slideWidth + "px", left : "-" + (direction === -1 ? 0 : width) + "px"});
+  if (settings._mobileMode) {
+    css($dom.slider, {width: "200%"})
+    css(view, {display : "block"});
+  } else {
+    var slideWidth = currentView ? $dom.wrapper.width() + width : width;
+    css(view, {width: width + "px"});
+    css($dom.slider, {width : slideWidth + "px", left : "-" + (direction === -1 ? 0 : width) + "px"});
+  }
   _.each(paneSpecs, function(spec) {spec.view.removeClass("right").removeClass("left")});
   if (currentView) {
     currentView.addClass(direction === -1 ? "left" : "right");
@@ -189,11 +239,19 @@ function swapPanes(direction, spec) {
   }
   var animate = currentIndex === null ? false : true;
   setTitle(spec.title);
-  var newHeights = paneHeights(spec);
-  css($dom.body, {bottom : newHeights.footer + "px", top: newHeights.header + "px"}, true);
-  css(spec.view, {height : newHeights.pane + "px"});
-  resizeModal(spec.width, newHeights.modal, !animate);
-  css($dom.slider, {left : "-" + (direction === -1 ? oldWidth : 0) + "px"}, animate);
+  if (!settings._mobileMode) {
+    var newHeights = paneHeights(spec);
+    css($dom.body, {bottom : newHeights.footer + "px", top: newHeights.header + "px"}, true);
+    css(spec.view, {height : newHeights.pane + "px"});
+    resizeModal(spec.width, newHeights.modal, !animate);
+    css($dom.slider, {left : "-" + (direction === -1 ? oldWidth : 0) + "px"}, animate);
+  } else {
+    scrollTop(0);
+    if (currentIndex != null) {
+      css(paneSpecs[currentIndex].view, {display : "none"});
+    }
+    css($dom.slider, {left : "-" + (direction === -1 ? 100 : 0) + "%"}, animate);
+  }
 }
 
 function makePreSpinner() {
@@ -229,12 +287,16 @@ function createDom(loading) {
   $dom.wrapper = $("<div id='s_simple_modal_wrapper' ></div>")
     .append($dom.closeButton, $dom.header, $dom.body, $dom.footer);
   $dom.container = $("<div id='s_simple_modal'></div>");
+  $dom.container.addClass((settings._mobileMode ? "mobile" : "desktop") + "Mode");
   if (loading) {
     $dom.wrapper.addClass(loadingClass);
     makePreSpinner();
   }
-  $dom.container.append($dom.wrapper);
+  $dom.background = $("<div id='s_simple_modal_bg'></div>");
+  $dom.container.append($dom.wrapper, $dom.background);
   $("body").append($dom.container);
+
+  alterTopLevelElement();
 }
 
 function processSpec(spec) {
@@ -247,10 +309,21 @@ function processSpec(spec) {
   paneSpecs.push(newSpec);
 }
 
+function privateClose(ignoreCallback) {
+  var re = (settings.closeCallback && !ignoreCallback) ? closeCallback() : true;
+  if (re == null || re && $dom) {
+    $dom.container.remove();
+    paneSpecs = [];
+    $dom = null;
+    currentIndex = null;
+    resetTopLevelElement();
+  }
+}
+
 function closeIfEsc(e) {
   if(e.keyCode == 27) {
     $(window).off(".simple_modal");
-    closeModal();
+    privateClose();
   }
 }
 
@@ -272,10 +345,12 @@ function hideLoading() {
 }
 
 function updateHeight(desiredHeight) {
-  var pane = paneSpecs[currentIndex].view;
-  var heights = paneHeights(paneSpecs[currentIndex], desiredHeight)
-  css(pane, {height : ""});
-  resizeModal($dom.wrapper.width(), heights.modal);
+  if (!settings._mobileMode) {
+    var pane = paneSpecs[currentIndex].view;
+    var heights = paneHeights(paneSpecs[currentIndex], desiredHeight)
+    css(pane, {height : ""});
+    resizeModal($dom.wrapper.width(), heights.modal);
+  }
 }
 
 function setPaneByIndex(index, showLoadingPane) {
@@ -311,12 +386,7 @@ function previous() {
 }
 
 function closeModal() {
-  if ($dom) {
-    $dom.container.remove();
-    paneSpecs = [];
-    $dom = null;
-    currentIndex = null;
-  }
+  privateClose(true);
 }
 
 function showModal() {
@@ -325,13 +395,15 @@ function showModal() {
 }
 
 function openModal(specs, settings, loading) {
-  mergeSettings(["windowPadding", "width", "height", "loadingView"], settings || {});
-
+  mergeSettings(["windowPadding", "width", "height", "loadingView",
+                 "closeCallback", "mobileCutoff", "topLevelElement"],
+                settings || {});
   $(window).on("keydown.simple_modal", closeIfEsc);
 
   if ($dom) return;
+  setModalMode();
   createDom(loading);
-  $dom.closeButton.click(closeModal);
+  $dom.closeButton.click(privateClose);
   _.each(specs, processSpec);
   setPaneByIndex(0);
 }

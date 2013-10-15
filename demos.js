@@ -28,7 +28,9 @@ var sampleSpecs = [{view : "<div class='one'>Oh Hello <img height=300 src='pane-
 
 
 function demoNormal() {
-  SimpleModal.open(sampleSpecs);
+  SimpleModal.open(sampleSpecs,
+                   {mobileCutoff : 4000,
+                    topLevelElement : $("#toplevel")});
 }
 
 function demoPreLoad() {
@@ -42,7 +44,8 @@ function demoLargeHeight() {
   SimpleModal.open([{view : $("<div>My craxy tall content</div>").css("height", "1000px"),
               width:300,
               buttons : [{text : "Next", click: function(){SimpleModal.setPaneByIndex(1)}}]},
-             sampleSpecs[1]]);
+             sampleSpecs[1]],
+             {topLevelElement : $("#toplevel")});
 }
 
 function demoPaneCallback() {
@@ -70,5 +73,16 @@ function demoCustomHeader() {
               desiredHeight:200,
               buttons : [{text : "back", click : SimpleModal.previous}]
              }
-])
+],              {mobileCutoff : 4000, 
+topLevelElement : $("#toplevel")})
+}
+
+
+function demoResponsive() {
+  SimpleModal.open([{view : $("<div>My craxy tall content</div>").css("height", "1000px"),
+              width:300,
+              buttons : [{text : "Next", click: function(){SimpleModal.setPaneByIndex(1)}}]},
+             sampleSpecs[1]],
+             {mobileCutoff : 4000,
+              topLevelElement : $("#toplevel")});
 }

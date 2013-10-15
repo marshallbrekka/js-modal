@@ -1,5 +1,10 @@
 /** Demo specific styles **/
 
+body {
+    margin:0;
+    padding:0;
+}
+
 .one {
     background:red;
 }

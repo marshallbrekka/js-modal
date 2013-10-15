@@ -1,20 +1,21 @@
-#s_simple_modal {
-    position:absolute;
+#s_simple_modal_bg {
+    background:#000000;
+    position:fixed;
+    filter: alpha(opacity=75);
+    opacity:0.75;
     top:0;
     bottom:0;
     left:0;
     right:0;
-    background:none;
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#BF000000,endColorstr=#BF000000);
-    -ms-filter: "progid:DXImageTransform.Microsoft.gradient(enabled=false)" !important; /* ie9 requires quotes */
-    zoom: 1;
-    background:rgba(0,0,0,0.75);
+    z-index:1000;
 }
 
-#s_simple_modal_wrapper {
+
+.desktopMode #s_simple_modal_wrapper {
     position:absolute;
     top:50%;
     left:50%;
+    z-index:1001;
 
 /* customizable - width, height, and margins are sort of initial defaults */
     width:400px;
@@ -23,6 +24,12 @@
     margin-left:-200px;
     border-radius:4px;
     box-shadow:0 2px 10px 0px rgba(0,0,0,0.5);
+}
+
+.mobileMode #s_simple_modal_wrapper {
+    margin:5px;
+    position:relative;
+    z-index:1001;
 }
 
 .s_simple_modal_loading {
@@ -60,7 +67,7 @@
     border-radius:4px 4px 0 0;
 }
 
-#s_simple_modal_body {
+.desktopMode #s_simple_modal_body {
     position:absolute;
     top:45px;
     left:0;
@@ -70,12 +77,28 @@
     overflow:hidden;
 }
 
-#s_simple_modal_pane_slider {
+.mobileMode #s_simple_modal_body {
+    background:#fff;
+    position:relative;
+    overflow-y:auto;
+    overflow-x:hidden;
+}
+
+.desktopMode #s_simple_modal_pane_slider {
     position:absolute;
     top:0;
     bottom:0;
     left:0;
     width:1000px;
+    transition-timing-function: ease-out;
+}
+
+.mobileMode #s_simple_modal_pane_slider {
+    position:relative;
+    top:0;
+    left:0;
+    width:100%;
+    overflow:auto;
     transition-timing-function: ease-out;
 }
 
@@ -89,11 +112,18 @@
     background:#fff;
 }
 
-.s_simple_modal_pane {
+.desktopMode .s_simple_modal_pane {
     display:none;
     position:absolute;
     top:0;
     bottom:0;
+    overflow:auto;
+}
+
+.mobileMode .s_simple_modal_pane {
+    display:none;
+    position:relative;
+    top:0;
     overflow:auto;
 }
 
@@ -110,19 +140,32 @@
     right:0;
 }
 
+.mobileMode .s_simple_modal_pane.right {
+    float:right;
+    width:50%;
+}
+
+.mobileMode .s_simple_modal_pane.left {
+    float:left;
+    width:50%;
+}
+
 .s_simple_modal_pane.left {
     display:block;
     left:0;
 }
 
 #s_simple_modal_footer {
+    height:45px;
+    background:#a1a1a1;
+    border-radius:0 0 4px 4px;
+}
+
+.desktopMode #s_simple_modal_footer {
     position:absolute;
     bottom:0;
     left:0;
     right:0;
-    height:45px;
-    background:#a1a1a1;
-    border-radius:0 0 4px 4px;
 }
 
 .s_simple_modal_button {
